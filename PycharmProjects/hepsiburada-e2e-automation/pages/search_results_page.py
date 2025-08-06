@@ -71,7 +71,7 @@ class SearchResultsPage:
             lambda d: 'filtreler=bedenler:M' in d.current_url
         )
 
-    def select_price(self):
+    def select_price(self, price_range: dict):
         print("⏳ Ждем загрузки панели фильтров...")
         filter_panel = WebDriverWait(self.browser, 15).until(
             EC.presence_of_element_located(FilterPanelLocators.FILTER_PANEL)
@@ -114,14 +114,14 @@ class SearchResultsPage:
             lambda: WebDriverWait(self.browser, 10).until(
                 EC.presence_of_element_located(FilterPanelLocators.PRICE_FROM_INPUT)
             ),
-            "800"
+            price_range["min"]
         )
 
         retry_send_keys(
             lambda: WebDriverWait(self.browser, 10).until(
                 EC.presence_of_element_located(FilterPanelLocators.PRICE_TO_INPUT)
             ),
-            "1200"
+            price_range["max"]
         )
 
         retry_click(lambda: WebDriverWait(self.browser, 10).until(
@@ -130,10 +130,10 @@ class SearchResultsPage:
 
         # 5. Дожидаемся, пока цена реально станет выбранной
         WebDriverWait(self.browser, 10).until(
-            lambda d: 'fiyat:800-1200' in d.current_url
+            lambda d: f"fiyat:{price_range["min"]}-{price_range["max"]}" in d.current_url
         )
 
-    def select_fabric(self):
+    def select_fabric(self, fabric_name):
         print("⏳ Ждем загрузки панели фильтров...")
         filter_panel = WebDriverWait(self.browser, 15).until(
             EC.presence_of_element_located(FilterPanelLocators.FILTER_PANEL)
@@ -159,30 +159,30 @@ class SearchResultsPage:
 
         time.sleep(0.3)
 
+        # 3. Получаем нужный локатор чекбокса по имени ткани
+        checkbox_locator = getattr(FilterPanelLocators, f"{fabric_name.upper()}_CHECKBOX", None)
+        if not checkbox_locator:
+            raise ValueError(f"❌ Локатор для типа ткани '{fabric_name}' не найден!")
+
         # 3. Заново находим панель и тип pamuk
         filter_panel = WebDriverWait(self.browser, 10).until(
             EC.presence_of_element_located(FilterPanelLocators.FILTER_PANEL)
         )
         fabric_checkbox = WebDriverWait(filter_panel, 10).until(
-            lambda panel: panel.find_element(*FilterPanelLocators.PAMUK_CHECKBOX)
+            lambda panel: panel.find_element(*checkbox_locator)
         )
 
         self.browser.execute_script("arguments[0].scrollIntoView({block: 'center'});", fabric_checkbox)
-        print("📜 Проскроллили до чекбокса PAMUK")
+        print(f"📜 Проскроллили до чекбокса {fabric_name.upper()}")
 
         time.sleep(0.3)
 
-        # 4. Кликаем по чекбоксу с ретраем
         retry_click(lambda: WebDriverWait(self.browser, 10).until(
-            EC.presence_of_element_located(FilterPanelLocators.PAMUK_CHECKBOX)
+            EC.presence_of_element_located(checkbox_locator)
         ))
-        print("👆 Кликнули по чекбоксу тип pamuk")
+        print(f"👆 Кликнули по чекбоксу типа {fabric_name}")
 
-        # 5. Дожидаемся, пока он реально станет выбранным
+        # 5. Проверяем URL
         WebDriverWait(self.browser, 10).until(
-            lambda d: 'Tipi:Pamuk' in d.current_url
+            lambda d: f'Tipi:{fabric_name}' in d.current_url
         )
-
-
-
-
