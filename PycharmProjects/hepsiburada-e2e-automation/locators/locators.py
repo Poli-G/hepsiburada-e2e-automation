@@ -11,6 +11,13 @@ class SearchResultsLocators:
 
 
 class FilterPanelLocators:
+    @staticmethod
+    def fabric_checkbox(fabric_name):
+        return (
+            By.XPATH,
+            f"//div[contains(@class, 'filter-panel')]//label[contains(., '{fabric_name}')]"
+        )
+
     FILTER_PANEL = (By.ID, "stickyVerticalFilter")
 
     SIZE_FILTER_SCROLL_TARGET = (By.XPATH, "//label[@for='collapse-bedenler']//div[@data-test-id='collapse-title']")
@@ -23,6 +30,8 @@ class FilterPanelLocators:
     PRICE_FROM_INPUT = (By.XPATH, "//input[@placeholder='En az' and @aria-label='En az']")
     PRICE_TO_INPUT = (By.XPATH, "//input[@placeholder='En çok' and @aria-label='En çok']")
     PRICE_APPLY_BUTTON =(By.XPATH, "//button[@aria-label='Filtrele']")
+
+
 
     FABRIC_FILTER_SCROLL_TARGET = (By.XPATH, "//label[starts-with(@for,'collapse-VariantList')]//div[@data-test-id='collapse-title' and text()='Kumaş Tipi']")
     FABRIC_COLLAPSE_ICON = (By.XPATH, "//label[.//div[text()='Kumaş Tipi']]//div[@data-test-id='collapse-icon']")
