@@ -1,8 +1,0 @@
-selenium
-pytest
-pytest-html
-webdriver-manager
-loguru
-python-dotenv
-requests
-pytest-xdist
