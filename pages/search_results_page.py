@@ -1,3 +1,5 @@
+from selenium.common import TimeoutException
+from selenium.webdriver import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -9,6 +11,24 @@ from utils.utils import retry_click, retry_send_keys, retry_find_element
 class SearchResultsPage:
     def __init__(self, browser):
         self.browser = browser
+
+    def close_overlay_if_present(self, timeout=5):
+        try:
+            overlay_element = WebDriverWait(self.browser, timeout).until(
+                EC.presence_of_element_located(SearchResultsLocators.OVERLAY)
+            )
+            window_size = self.browser.get_window_size()
+            x = window_size['width'] // 2
+            y = window_size['height'] // 2
+
+            actions = ActionChains(self.browser)
+            actions.move_by_offset(x, y).click().perform()
+
+            WebDriverWait(self.browser, timeout).until(
+                EC.invisibility_of_element(overlay_element)
+            )
+        except TimeoutException:
+            pass
 
     def get_products_count(self):
         products = WebDriverWait(self.browser, 10).until(

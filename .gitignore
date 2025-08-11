@@ -1,50 +1,45 @@
-# Python
+# Python bytecode
 __pycache__/
 *.py[cod]
+
+# Python packaging
 *.egg
 *.egg-info/
 dist/
 build/
+
+# Logs
 *.log
 
-# Virtual env
+# Virtual environment
 .venv/
 env/
 venv/
 
+# PyCharm IDE files
+.idea/
+
 # VS Code
 .vscode/
 
-# System
+# OS files
 .DS_Store
 Thumbs.db
 *.swp
 *.swo
 
-# Windows
-*.lnk
-*.bak
-*.tmp
-*.log
-*.regtrans-ms
-*.blf
-*.dat
-AppData/
-Desktop/
-Documents/
-Downloads/
-Videos/
-Pictures/
-Music/
-OneDrive/
-Contacts/
-Saved Games/
-3D Objects/
-NTUSER.*
-node_modules/
+# Python test caches
+.pytest_cache/
+.coverage
+htmlcov/
 
 # Robot Framework
 .robotframework-ls/
 
+# Node modules (если есть, судя по твоему)
+node_modules/
+
 # Screen Recorder
 .Icecream\ Screen\ Recorder/
+
+tests/cookies.json

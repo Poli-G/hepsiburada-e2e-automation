@@ -8,6 +8,7 @@ class HomePageLocators:
 
 class SearchResultsLocators:
     PRODUCT_CARD = (By.XPATH, "//div[contains(@class, 'productCard-module_productCardRoot')]")
+    OVERLAY = (By.CSS_SELECTOR, "[class*='overlay']")
 
 
 class FilterPanelLocators:

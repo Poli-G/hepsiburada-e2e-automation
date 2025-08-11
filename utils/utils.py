@@ -1,8 +1,6 @@
 import time
 from selenium.common.exceptions import StaleElementReferenceException
-from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
-
 from utils.cookie_handler import load_cookies
 
 
