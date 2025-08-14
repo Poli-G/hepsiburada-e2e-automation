@@ -1,3 +1,6 @@
+import random
+import re
+
 from selenium.common import TimeoutException
 from selenium.webdriver import ActionChains
 from selenium.webdriver.common.by import By
@@ -31,8 +34,10 @@ class SearchResultsPage:
             pass
 
     def get_products_count(self):
-        products = WebDriverWait(self.browser, 10).until(
-            EC.visibility_of_any_elements_located(SearchResultsLocators.PRODUCT_CARD)
+        products = retry_find_element(
+            lambda: WebDriverWait(self.browser, 10).until(
+                EC.visibility_of_any_elements_located(SearchResultsLocators.PRODUCT_CARD)
+            )
         )
         return len(products)
 
@@ -75,18 +80,12 @@ class SearchResultsPage:
 
     def select_size(self, size: str):
         # 1. Скроллим внутри панели до заголовка "Beden"
-        self.scroll_to_element_in_panel((
-            By.XPATH,
-            "//label[@for='collapse-bedenler']//div[@data-test-id='collapse-title']"
-        ))
+        self.scroll_to_element_in_panel((FilterPanelLocators.SIZE_FILTER_SCROLL_TARGET))
 
         # 2. Разворачиваем блок
-        self.expand_filter((
-            By.XPATH,
-            "//label[.//div[text()='Beden']]//div[@data-test-id='collapse-icon']"
-        ))
+        # self.expand_filter((FilterPanelLocators.SIZE_COLLAPSE_ICON))
 
-        # 3. Кликаем по нужному размеру (label, а не input)
+        # 3. Кликаем по нужному размеру
         size_label_locator = (By.XPATH, f'//input[@value="{size}"]/parent::label')
         retry_click(lambda: WebDriverWait(self.browser, 10).until(
             EC.element_to_be_clickable(size_label_locator)
@@ -149,3 +148,61 @@ class SearchResultsPage:
         WebDriverWait(self.browser, 10).until(
             lambda d: f'Tipi:{fabric_name}' in d.current_url
         )
+
+    def apply_filters(self, filters):
+        self.close_overlay_if_present()
+        for filter_name, filter_value in filters.items():
+            if filter_name == "size":
+                self.select_size(filter_value)
+            elif filter_name == "fabric":
+                self.select_fabric(filter_value)
+            elif filter_name == "price":
+                self.select_price(filter_value)
+            self.close_overlay_if_present()
+
+    def get_products_count_from_label(self):
+        element = retry_find_element(
+            lambda: WebDriverWait(self.browser, 10).until(
+                EC.visibility_of_element_located(SearchResultsLocators.PRODUCT_COUNT_LABEL)
+            )
+        )
+        # Берём текст напрямую через JS, чтобы точно актуальное
+        text = self.browser.execute_script("return arguments[0].textContent;", element)
+        numbers = re.findall(r'\d+', text.replace('.', ''))
+        return int(numbers[0]) if numbers else 0
+
+    def wait_until_label_count_changes(self, initial_count, timeout=10):
+        """Ждёт, пока количество товаров на лейбле изменится."""
+        WebDriverWait(self.browser, timeout).until(
+            lambda driver: self.get_products_count_from_label() != initial_count,
+            f"Product count did not change from {initial_count} within {timeout} seconds"
+        )
+
+    def select_random_dress(self, wait_time: float = 1.0):
+        """
+        Выбирает случайную карточку товара на странице и кликает по ней.
+        После клика делает небольшую задержку для загрузки страницы товара.
+
+        :param wait_time: сколько секунд подождать после клика
+        :return: текст выбранной карточки (название платья)
+        """
+        # Ждём появления хотя бы одной карточки
+        product_cards = retry_find_element(
+            lambda: WebDriverWait(self.browser, 10).until(
+                EC.visibility_of_any_elements_located(SearchResultsLocators.PRODUCT_CARD)
+            )
+        )
+
+        # Выбираем случайную карточку
+        random_card = random.choice(product_cards)
+        dress_name = random_card.text
+
+        # Кликаем через retry_click
+        retry_click(lambda: WebDriverWait(self.browser, 10).until(
+            EC.element_to_be_clickable(random_card)
+        ))
+
+        # Ждём небольшое время для загрузки страницы товара
+        time.sleep(wait_time)
+
+        return dress_name

@@ -43,3 +43,6 @@ node_modules/
 .Icecream\ Screen\ Recorder/
 
 tests/cookies.json
+
+*.html
+*.png

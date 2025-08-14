@@ -71,3 +71,4 @@ def wait_for_url_param(driver, param: str, timeout: int = 10):
     WebDriverWait(driver, timeout).until(
         lambda d: param in d.current_url
     )
+

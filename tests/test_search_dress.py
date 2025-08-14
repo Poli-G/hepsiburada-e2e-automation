@@ -12,9 +12,9 @@ def search_query():
 def test_search_dress(browser, search_query):
     auth_with_cookies(browser)
     home_page = HomePage(browser)
-
     home_page.search(search_query)
     search_results = SearchResultsPage(browser)
+    search_results.close_overlay_if_present()
     count = search_results.get_products_count()
 
     assert count > 0, "Product cards not found on page"

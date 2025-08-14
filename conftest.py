@@ -32,6 +32,10 @@ def authenticated_browser(browser):
     browser.refresh()  # обновить, чтобы cookies подгрузились
     return browser
 
+@pytest.fixture
+def search_query():
+    return "kırmızı elbise"
+
 
 @pytest.fixture
 def filters(request):
