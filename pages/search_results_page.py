@@ -178,31 +178,54 @@ class SearchResultsPage:
             f"Product count did not change from {initial_count} within {timeout} seconds"
         )
 
-    def select_random_dress(self, wait_time: float = 1.0):
-        """
-        Выбирает случайную карточку товара на странице и кликает по ней.
-        После клика делает небольшую задержку для загрузки страницы товара.
+    def get_and_verify_initial_count(self):
+        """Получаем количество товаров и проверяем, что оно больше нуля"""
+        count = self.get_products_count_from_label()
+        assert count > 0, "No products found according to the label count"
+        return count
 
-        :param wait_time: сколько секунд подождать после клика
-        :return: текст выбранной карточки (название платья)
-        """
-        # Ждём появления хотя бы одной карточки
-        product_cards = retry_find_element(
-            lambda: WebDriverWait(self.browser, 10).until(
-                EC.visibility_of_any_elements_located(SearchResultsLocators.PRODUCT_CARD)
+    def refresh_and_verify_count(self, previous_count: int):
+        """Обновляем страницу и проверяем, что количество товаров уменьшилось или осталось тем же"""
+        self.browser.refresh()
+        new_count = self.get_products_count_from_label()
+        assert new_count <= previous_count, f"Label count did not decrease after filters. Before: {previous_count}, After: {new_count}"
+        return new_count
+
+    def select_random_dress (self):
+        # Берём актуальное количество товаров через твою функцию
+        total_count = self.get_products_count_from_label()
+        if total_count == 0:
+            raise Exception("No products found on the page")
+
+        # Выбираем случайный индекс от 0 до total_count-1
+        random_index = random.randint(0, total_count - 1)
+
+        # Локатор всех карточек товаров
+        product_locator = SearchResultsLocators.PRODUCT_CARD
+
+        def get_product_at_index(index):
+            # Находим все карточки
+            elements = WebDriverWait(self.browser, 10).until(
+                EC.presence_of_all_elements_located(product_locator)
             )
-        )
+            # Если нужной карточки ещё нет, скроллим вниз и ждём
+            while len(elements) <= index:
+                self.browser.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+                time.sleep(1)
+                elements = self.browser.find_elements(*product_locator)
+            return elements[index]
 
-        # Выбираем случайную карточку
-        random_card = random.choice(product_cards)
-        dress_name = random_card.text
+        # Берём элемент по индексу с ретраем на случай StaleElement
+        product = retry_find_element(lambda: get_product_at_index(random_index))
 
-        # Кликаем через retry_click
-        retry_click(lambda: WebDriverWait(self.browser, 10).until(
-            EC.element_to_be_clickable(random_card)
-        ))
+        # Скроллим до него, чтобы точно был в зоне видимости
+        self.browser.execute_script("arguments[0].scrollIntoView({block: 'center'});", product)
+        time.sleep(0.5)  # немного подождать анимацию
 
-        # Ждём небольшое время для загрузки страницы товара
-        time.sleep(wait_time)
+        # Получаем название платья (если нужно)
+        name = product.text
 
-        return dress_name
+        # Кликаем по нему
+        product.click()
+
+        return name

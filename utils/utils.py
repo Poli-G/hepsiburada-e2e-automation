@@ -2,12 +2,18 @@ import time
 from selenium.common.exceptions import StaleElementReferenceException
 from selenium.webdriver.support.wait import WebDriverWait
 from utils.cookie_handler import load_cookies
+from urllib.parse import urljoin
 
 
-def auth_with_cookies(browser, cookie_file="cookies.json"):
-    browser.get("https://www.hepsiburada.com/")
+def auth_with_cookies(browser, base_url, cookie_file="cookies.json"):
+    browser.get(base_url)
     load_cookies(browser, cookie_file)
     browser.refresh()
+
+
+def open_path(browser, base_url, path):
+    full_url = urljoin(base_url, path)
+    browser.get(full_url)
 
 
 def retry_find_element(find_element_func, retries=3, delay=1):

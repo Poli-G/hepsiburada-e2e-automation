@@ -9,8 +9,8 @@ def search_query():
     return "kırmızı elbise"
 
 
-def test_search_dress(browser, search_query):
-    auth_with_cookies(browser)
+def test_search_dress(browser, base_url, search_query):
+    auth_with_cookies(browser, base_url)
     home_page = HomePage(browser)
     home_page.search(search_query)
     search_results = SearchResultsPage(browser)

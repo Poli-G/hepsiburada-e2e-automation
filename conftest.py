@@ -7,8 +7,21 @@ import os
 from data.base_filters import BASE_FILTERS
 import copy
 
-
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+
+def pytest_addoption(parser):
+    parser.addoption(
+        "--base-url",
+        action="store",
+        default="https://www.hepsiburada.com",
+        help="Base URL for the test"
+    )
+
+
+@pytest.fixture
+def base_url(request):
+    return request.config.getoption("--base-url")
 
 
 @pytest.fixture(scope="session")
@@ -26,11 +39,12 @@ def browser():
 
 
 @pytest.fixture
-def authenticated_browser(browser):
-    browser.get("https://hepsiburada.com")  # важно: зайти до загрузки cookies
+def authenticated_browser(browser, base_url):
+    browser.get(base_url)  # важно: зайти до загрузки cookies
     load_cookies(browser, "cookies.json")
     browser.refresh()  # обновить, чтобы cookies подгрузились
     return browser
+
 
 @pytest.fixture
 def search_query():
@@ -39,7 +53,6 @@ def search_query():
 
 @pytest.fixture
 def filters(request):
-
     data = copy.deepcopy(BASE_FILTERS)
     if hasattr(request, "param") and request.param:
         for key, value in request.param.items():

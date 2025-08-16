@@ -1,5 +1,3 @@
-from urllib.parse import quote_plus
-
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -9,10 +7,11 @@ from pages.base_page import BasePage
 from utils.utils import retry_click
 from locators.locators import HomePageLocators
 
+
 class HomePage(BasePage):
 
-    def open(self):
-        self.browser.get("https://www.hepsiburada.com")
+    def open(self, base_url):
+        self.browser.get(base_url)
 
     def search(self, query):
         def find_and_click():
