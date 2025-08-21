@@ -3,6 +3,8 @@ from selenium.common.exceptions import StaleElementReferenceException
 from selenium.webdriver.support.wait import WebDriverWait
 from utils.cookie_handler import load_cookies
 from urllib.parse import urljoin
+import logging
+from colorama import Fore, Style
 
 
 def auth_with_cookies(browser, base_url, cookie_file="cookies.json"):
@@ -16,54 +18,54 @@ def open_path(browser, base_url, path):
     browser.get(full_url)
 
 
-def retry_find_element(find_element_func, retries=3, delay=1):
+def retry_find_element(find_element_func, logger, retries=3, delay=1):
     for attempt in range(1, retries + 1):
         try:
-            print(f"[{attempt}/{retries}] Attempt to find element...")
+            logger.info(f"[{attempt}/{retries}] Attempt to find element...")
             element = find_element_func()
-            print("✅ Element found.")
+            logger.info("✅ Element found.")
             return element
-        except StaleElementReferenceException:
-            print(f"⚠️ StaleElementReferenceException on find. Retry after {delay}s.")
+        except StaleElementReferenceException as e:
+            logger.warning(f"⚠️ Exception: {e}. Retry after {delay}s.")
             time.sleep(delay)
-    raise Exception("❌ Unable to find element after multiple attempts.")
+    raise Exception("Unable to find element after multiple attempts.")
 
 
-def retry_click(find_element_func, retries=3, delay=1):
+def retry_click(find_element_func, logger, retries=3, delay=1):
     """
     Attempts to click on the element returned by `find_element_func`,
     retries if StaleElementReferenceException occurs.
     """
     for attempt in range(1, retries + 1):
         try:
-            print(f"[{attempt}/{retries}] Attempt to click on an element...")
+            logger.info(f"[{attempt}/{retries}] Attempt to click on an element...")
             element = find_element_func()
             element.click()
-            print("✅ Click successful.")
+            logger.info("Click successful.")
             return
-        except StaleElementReferenceException:
-            print(f"⚠️ StaleElementReferenceException. Повтор через {delay}с.")
+        except StaleElementReferenceException as e:
+            logger.warning(f"⚠Exception: {e}. Retry after {delay}s.")
             time.sleep(delay)
-    raise Exception("❌ Unable to click on element after multiple attempts.")
+    raise Exception("Unable to click on element after multiple attempts.")
 
 
-def retry_send_keys(find_element_func, text, retries=3, delay=1):
+def retry_send_keys(find_element_func, text, logger=None, retries=3, delay=1):
     """
     Attempts to send keys to the element returned by `find_element_func`,
     retries if StaleElementReferenceException occurs.
     """
     for attempt in range(1, retries + 1):
         try:
-            print(f"[{attempt}/{retries}] Attempt to send keys '{text}' to an element...")
+            logger.info(f"[{attempt}/{retries}] Attempt to send keys '{text}' to an element...")
             element = find_element_func()
             element.clear()
             element.send_keys(text)
-            print("✅ Input successful.")
+            logger.info("Input successful.")
             return
-        except StaleElementReferenceException:
-            print(f"⚠️ StaleElementReferenceException. Повтор через {delay}с.")
+        except StaleElementReferenceException as e:
+            logger.warning(f"Exception: {e}. Retry after {delay}s.")
             time.sleep(delay)
-    raise Exception(f"❌ Unable to send keys '{text}' to element after multiple attempts.")
+    raise Exception(f"Unable to send keys '{text}' to element after multiple attempts.")
 
 
 def wait_for_url_param(driver, param: str, timeout: int = 10):
@@ -77,4 +79,22 @@ def wait_for_url_param(driver, param: str, timeout: int = 10):
     WebDriverWait(driver, timeout).until(
         lambda d: param in d.current_url
     )
+
+class ColoredFormatter(logging.Formatter):
+    COLORS = {
+        logging.DEBUG: Fore.LIGHTBLUE_EX,
+        logging.INFO: Fore.LIGHTGREEN_EX,
+        logging.WARNING: Fore.LIGHTYELLOW_EX,
+        logging.ERROR: Fore.RED,
+        logging.CRITICAL: Fore.RED + Style.BRIGHT
+    }
+
+    def format(self, record):
+        if record.levelno in self.COLORS:
+            record.levelname = (f"{self.COLORS[record.levelno]}"
+                                f"{record.levelname}{Style.RESET_ALL}")
+            record.msg = (f"{self.COLORS[record.levelno]}"
+                          f"{record.msg}{Style.RESET_ALL}")
+
+        return super().format(record)
 

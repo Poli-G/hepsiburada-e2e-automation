@@ -6,6 +6,8 @@ import sys
 import os
 from data.base_filters import BASE_FILTERS
 import copy
+import logging
+from utils.utils import ColoredFormatter
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
@@ -19,7 +21,7 @@ def pytest_addoption(parser):
     )
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def base_url(request):
     return request.config.getoption("--base-url")
 
@@ -61,3 +63,18 @@ def filters(request):
             else:
                 data[key] = value
     return data
+
+
+@pytest.fixture
+def logger():
+    log = logging.getLogger("pytest_logger")
+    log.setLevel(logging.DEBUG)
+
+    if not log.handlers:
+        console_handler = logging.StreamHandler()
+        console_handler.setFormatter(ColoredFormatter("%(asctime)s - %(levelname)s - %(message)s"))
+        # formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
+        # console_handler.setFormatter(formatter)
+        log.addHandler(console_handler)
+
+    return log

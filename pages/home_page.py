@@ -22,7 +22,7 @@ class HomePage(BasePage):
                 self.browser.execute_script("arguments[0].click();", element)
             return element
 
-        retry_click(find_and_click)
+        retry_click(find_and_click, logger=self.logger)
 
         search_box = WebDriverWait(self.browser, 10).until(
             EC.element_to_be_clickable(HomePageLocators.SEARCH_BOX)

@@ -2,9 +2,9 @@ from utils.cookie_handler import save_cookies
 import time
 
 
-def test_manual_login_and_save_cookies(browser, base_url):
+def test_manual_login_and_save_cookies(browser, base_url, logger):
     browser.get(base_url)
-    print("Залогинься вручную в течение 60 секунд...")
-    time.sleep(60)  # время вручную залогиниться
+    logger.info("Login manually within 60 seconds...")
+    time.sleep(60) # time for a manual login
     save_cookies(browser, "cookies.json")
-    print("Cookies сохранены")
+    logger.info("Login manually within 60 seconds...")

@@ -1,6 +1,6 @@
 import random
 import re
-
+from conftest import logger
 from selenium.common import TimeoutException
 from selenium.webdriver import ActionChains
 from selenium.webdriver.common.by import By
@@ -12,7 +12,8 @@ from utils.utils import retry_click, retry_send_keys, retry_find_element
 
 
 class SearchResultsPage:
-    def __init__(self, browser):
+    def __init__(self, browser, logger):
+        self.logger = logger
         self.browser = browser
 
     def close_overlay_if_present(self, timeout=5):
@@ -36,8 +37,9 @@ class SearchResultsPage:
     def get_products_count(self):
         products = retry_find_element(
             lambda: WebDriverWait(self.browser, 10).until(
-                EC.visibility_of_any_elements_located(SearchResultsLocators.PRODUCT_CARD)
-            )
+                EC.visibility_of_any_elements_located(SearchResultsLocators.PRODUCT_CARD),
+            ),
+            self.logger
         )
         return len(products)
 
@@ -66,7 +68,8 @@ class SearchResultsPage:
     def expand_filter(self, expand_icon_locator):
         retry_click(lambda: WebDriverWait(self.browser, 10).until(
             EC.element_to_be_clickable(expand_icon_locator)
-        ))
+        ), self.logger
+                    )
         time.sleep(0.3)
 
     def click_checkbox_in_filter(self, checkbox_locator):
@@ -76,7 +79,8 @@ class SearchResultsPage:
         time.sleep(0.3)
         retry_click(lambda: WebDriverWait(self.browser, 10).until(
             EC.presence_of_element_located(checkbox_locator)
-        ))
+        ), self.logger
+                    )
 
     def select_size(self, size: str):
         # 1. Скроллим внутри панели до заголовка "Beden"
@@ -89,7 +93,8 @@ class SearchResultsPage:
         size_label_locator = (By.XPATH, f'//input[@value="{size}"]/parent::label')
         retry_click(lambda: WebDriverWait(self.browser, 10).until(
             EC.element_to_be_clickable(size_label_locator)
-        ))
+        ), self.logger
+                    )
 
         # 4. Ждём, пока фильтр применится
         WebDriverWait(self.browser, 10).until(
@@ -113,19 +118,22 @@ class SearchResultsPage:
             lambda: WebDriverWait(self.browser, 10).until(
                 EC.presence_of_element_located(FilterPanelLocators.PRICE_FROM_INPUT)
             ),
-            price_range["min"]
+            price_range["min"],
+            self.logger
         )
 
         retry_send_keys(
             lambda: WebDriverWait(self.browser, 10).until(
                 EC.presence_of_element_located(FilterPanelLocators.PRICE_TO_INPUT)
             ),
-            price_range["max"]
+            price_range["max"],
+            self.logger
         )
 
         retry_click(lambda: WebDriverWait(self.browser, 10).until(
             EC.presence_of_element_located(FilterPanelLocators.PRICE_APPLY_BUTTON)
-        ))
+        ), self.logger
+                    )
 
         WebDriverWait(self.browser, 10).until(
             lambda d: f"fiyat:{price_range['min']}-{price_range['max']}" in d.current_url
@@ -163,8 +171,9 @@ class SearchResultsPage:
     def get_products_count_from_label(self):
         element = retry_find_element(
             lambda: WebDriverWait(self.browser, 10).until(
-                EC.visibility_of_element_located(SearchResultsLocators.PRODUCT_COUNT_LABEL)
-            )
+                EC.visibility_of_element_located(SearchResultsLocators.PRODUCT_COUNT_LABEL),
+            ),
+            self.logger
         )
         # Берём текст напрямую через JS, чтобы точно актуальное
         text = self.browser.execute_script("return arguments[0].textContent;", element)
@@ -191,7 +200,7 @@ class SearchResultsPage:
         assert new_count <= previous_count, f"Label count did not decrease after filters. Before: {previous_count}, After: {new_count}"
         return new_count
 
-    def select_random_dress (self):
+    def select_random_dress(self):
         # Берём актуальное количество товаров через твою функцию
         total_count = self.get_products_count_from_label()
         if total_count == 0:
@@ -216,7 +225,8 @@ class SearchResultsPage:
             return elements[index]
 
         # Берём элемент по индексу с ретраем на случай StaleElement
-        product = retry_find_element(lambda: get_product_at_index(random_index))
+        product = retry_find_element(lambda: get_product_at_index(random_index),
+                                     self.logger)
 
         # Скроллим до него, чтобы точно был в зоне видимости
         self.browser.execute_script("arguments[0].scrollIntoView({block: 'center'});", product)

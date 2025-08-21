@@ -5,8 +5,9 @@ from selenium.webdriver.common.by import By
 
 
 class BasePage:
-    def __init__(self, browser):
+    def __init__(self, browser, logger):
         self.browser = browser
+        self.logger = logger
 
     def wait_for_clickable(self, locator, timeout=10):
         wait = WebDriverWait(self.browser, timeout, ignored_exceptions=[StaleElementReferenceException])
